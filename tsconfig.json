@@ -1,0 +1,27 @@
+{
+  "display": "Node",
+  "compilerOptions": {
+    "forceConsistentCasingInFileNames": true,
+    "strictNullChecks": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "noUnusedParameters": true,
+    "noUnusedLocals": true,
+    "noFallthroughCasesInSwitch": true,
+    "moduleResolution": "Node",
+    "esModuleInterop": true,
+    "target": "ES5",
+    "lib": ["ES6", "DOM"],
+    "allowSyntheticDefaultImports": true,
+    "allowJs": false,
+    "isolatedModules": false,
+    "alwaysStrict": true,
+    "declaration": false,
+    "outDir": "./build",
+    "rootDir": ".",
+    "noEmit": false,
+  },
+  "exclude": ["node_modules", "build", "tsconfig.json"],
+  "include": ["**/*.ts", "**/*.json"]
+}
+

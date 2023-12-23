@@ -1,0 +1,53 @@
+name: Bot
+on:
+  pull_request:
+    paths-ignore:
+      - README.md
+  push:
+    branches:
+      - main
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+
+      - name: Build Docker image
+        working-directory: .
+        run: docker build -t name-who .
+
+  validation:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: "npm"
+
+      - name: Conventional Commits
+        uses: webiny/action-conventional-commits@v1.2.0
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Typecheck
+        run: npm run typescript-check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Check for non generated files
+        working-directory: .
+        run: git diff --exit-code

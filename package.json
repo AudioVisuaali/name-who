@@ -1,0 +1,32 @@
+{
+  "name": "name-who",
+  "version": "1.0.0",
+  "description": "",
+  "author": "audiovisuaali",
+  "license": "ISC",
+  "scripts": {
+    "dev": "tsc && node -r dotenv/config ./build/app/index.js dotenv_config_path=./.env",
+    "apply-commands": "tsc && node -r dotenv/config ./build/app/scripts/register-commands.js dotenv_config_path=./.env",
+    "lint": "biome check ./",
+    "lint:fix": "biome check --apply-unsafe ./",
+    "typescript-check": "tsc",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "axios": "^0.27.2",
+    "axios-rate-limit": "^1.3.0",
+    "discord.js": "^14.14.1",
+    "fp-ts": "^2.12.1",
+    "io-ts": "^2.2.16",
+    "luxon": "^2.3.2",
+    "pino": "^8.17.2",
+    "pino-pretty": "^10.2.3"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.4.1",
+    "@types/luxon": "^2.3.1",
+    "@types/node": "^20.10.3",
+    "dotenv": "^16.0.0",
+    "typescript": "^5.3.3"
+  }
+}
