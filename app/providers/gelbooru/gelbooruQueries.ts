@@ -27,11 +27,43 @@ const booruClient = rateLimit(booruClientBase, {
 	maxRPS: 1,
 });
 
-type GetPostsParams = {
-	pageIndex: number;
+type GelbooruFilters = {
 	requiredTags: string[];
 	orTags: string[];
 	removeRatings: GelbooruRating[];
+};
+
+const createFilterTags = (params: GelbooruFilters) => {
+	const tagsParts = [
+		...params.requiredTags,
+		...params.removeRatings.map((r) => `-rating:${r}`),
+	];
+	if (params.orTags.length === 1) {
+		tagsParts.push(params.orTags[0]);
+	}
+	if (params.orTags.length > 1) {
+		tagsParts.push(`{${params.orTags.join(" ~ ")}}`);
+	}
+
+	return tagsParts;
+};
+
+type GetCountParams = {
+	requiredTags: string[];
+	orTags: string[];
+	removeRatings: GelbooruRating[];
+};
+
+type GetPostsParams = {
+	pagination: {
+		limit: number;
+		pageIndex: number;
+	};
+	filters: GelbooruFilters;
+};
+
+export type GelbooruPagination = {
+	count: number;
 };
 
 type GetTagsParams = {
@@ -42,24 +74,15 @@ export const gelbooruQueries = {
 	getPosts: async (
 		params: GetPostsParams,
 	): Promise<Try<GelbooruPostDecoded[], Error>> => {
-		try {
-			const tagsParts = [
-				...params.requiredTags,
-				...params.removeRatings.map((r) => `-rating:${r}`),
-			];
-			if (params.orTags.length === 1) {
-				tagsParts.push(params.orTags[0]);
-			}
-			if (params.orTags.length > 1) {
-				tagsParts.push(`{${params.orTags.join(" ~ ")}}`);
-			}
+		const tagsParts = createFilterTags(params.filters);
 
+		try {
 			const response = await booruClient.get("", {
 				params: {
 					s: "post",
 					tags: tagsParts.join(" "),
-					pid: params.pageIndex,
-					limit: 15,
+					pid: params.pagination.pageIndex,
+					limit: params.pagination.limit ?? 15,
 				},
 			});
 
@@ -70,6 +93,31 @@ export const gelbooruQueries = {
 			}
 
 			return toSuccess(result.right.post ?? []);
+		} catch (error) {
+			return toFailure(error as AxiosError);
+		}
+	},
+
+	getCount: async (params: GetCountParams): Promise<Try<number, Error>> => {
+		const tagsParts = createFilterTags(params);
+
+		try {
+			const response = await booruClient.get("", {
+				params: {
+					s: "post",
+					tags: tagsParts.join(" "),
+					pid: 0,
+					limit: 1,
+				},
+			});
+
+			const result = GelbooruPostsResponseCodec.decode(response.data);
+
+			if (result._tag !== "Right") {
+				return toFailure(errorFromDecodeError(result));
+			}
+
+			return toSuccess(result.right["@attributes"].count);
 		} catch (error) {
 			return toFailure(error as AxiosError);
 		}

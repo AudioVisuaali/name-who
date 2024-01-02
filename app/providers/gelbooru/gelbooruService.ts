@@ -5,6 +5,7 @@ import { Try, toFailure, toSuccess } from "../../helpers/validation";
 import { GelbooruPostDecoded } from "./codecs/GelbooruPostCodec";
 import { GelbooruRating } from "./codecs/GelbooruRatingCodec";
 import { GelbooruTagDecoded } from "./codecs/GelbooruTagCodec";
+import { GelbooruPaging } from "./gelbooruPaging";
 import { gelbooruQueries } from "./gelbooruQueries";
 
 const mapRating = (rating: CommandNameWhoRatingValue) => {
@@ -68,16 +69,34 @@ export const gelbooruService = {
 		const tagsCache: Record<string, GelbooruTagDecoded> = {};
 		const posts: Combined[] = [];
 
-		let pageIndex = 0;
+		const LIMIT = 10;
+		const gelbooruOptions = {
+			removeRatings: mapRating(params.rating),
+			orTags: ["1girl", "1boy"],
+			requiredTags: params.tags,
+		};
+		const paginationResult = await gelbooruQueries.getCount(gelbooruOptions);
+		if (!paginationResult.success) {
+			return toFailure(paginationResult.failure);
+		}
+
+		const pageCount = Math.floor(paginationResult.value / LIMIT);
+		console.log(`@page.max ${pageCount}`);
+
+		const paging = new GelbooruPaging(pageCount);
 		let noFurtherPosts = false;
 		while (!noFurtherPosts && posts.length < params.targetCount) {
-			console.log(`@page ${pageIndex + 1}`);
+			const pageIndex = paging.getNextPageIndex();
+			if (!pageIndex) {
+				noFurtherPosts = true;
+				continue;
+			}
+
+			console.log(`@page.index ${pageIndex}`);
 			console.log(`@posts.total ${posts.length}`);
 			const resultPosts = await gelbooruQueries.getPosts({
-				pageIndex,
-				removeRatings: mapRating(params.rating),
-				orTags: ["1girl", "1boy"],
-				requiredTags: params.tags,
+				pagination: { limit: LIMIT, pageIndex },
+				filters: gelbooruOptions,
 			});
 			if (!resultPosts.success) {
 				return toFailure(resultPosts.failure);
@@ -86,8 +105,6 @@ export const gelbooruService = {
 				noFurtherPosts = true;
 				continue;
 			}
-
-			pageIndex += 1;
 
 			const missingTags: string[] = [];
 			for (const post of resultPosts.value) {
