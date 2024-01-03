@@ -108,7 +108,7 @@ export const commandNameWhoRounds = {
 	},
 };
 
-export const commandNameWhoTagsRegex = /^[a-z0-9_]+[,[a-z0-9_]+]?$/;
+export const commandNameWhoTagsRegex = /^[a-z0-9_'"!]+[,[a-z0-9_]+]?$/;
 export const commandNameWhoTags = {
 	name: "tags",
 	required: false,

@@ -10,8 +10,12 @@ export class GelbooruPaging {
 	private startedPageCount: number;
 	private started: boolean;
 
-	constructor(totalPageCount: number) {
-		this.totalPageCount = Math.min(totalPageCount, MAX_API_ALLOWED_PAGE_COUNT);
+	constructor(totalPageCount: number, pageSize: number) {
+		const maxPageCount = Math.min(
+			totalPageCount,
+			Math.floor((MAX_API_ALLOWED_PAGE_COUNT - pageSize) / pageSize),
+		);
+		this.totalPageCount = maxPageCount;
 		this.startedPageCount = randomIntFromInterval(0, this.totalPageCount);
 		this.currentPageCount = this.startedPageCount;
 		this.incrementCurrentPageCount();

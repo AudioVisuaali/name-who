@@ -39,9 +39,9 @@ const mapRating = (rating: CommandNameWhoRatingValue) => {
 	}
 };
 
-const tagFilterRegex = /^[a-z0-9_()]+$/;
+const tagFilterRegex = /^[a-z0-9_'"!()]+$/;
 const filterTag = (tag: string) => tagFilterRegex.test(tag);
-const selectOnlyChildTagRegex = /^([a-z0-9]+)(_\([a-z0-9_]+\))*$/;
+const selectOnlyChildTagRegex = /^([a-z0-9_'"!]+)(_\([a-z0-9_]+\))*$/;
 const removeParentFromTag = (tag: string): Try<string, Error> => {
 	const match = tag.match(selectOnlyChildTagRegex);
 	if (!match) {
@@ -83,7 +83,7 @@ export const gelbooruService = {
 		const pageCount = Math.floor(paginationResult.value / LIMIT);
 		console.log(`@page.max ${pageCount}`);
 
-		const paging = new GelbooruPaging(pageCount);
+		const paging = new GelbooruPaging(pageCount, LIMIT);
 		let noFurtherPosts = false;
 		while (!noFurtherPosts && posts.length < params.targetCount) {
 			const pageIndex = paging.getNextPageIndex();
@@ -143,6 +143,18 @@ export const gelbooruService = {
 				const relatedTags = [];
 				for (const postTagString of postTags) {
 					const postTag = tagsCache[postTagString];
+					if (!postTag) {
+						console.log("FAILURE: Could not find tag in cache");
+						console.log(
+							JSON.stringify({
+								postId: post.id,
+								tags: postTags,
+								failureTag: postTagString,
+							}),
+						);
+						console.log("Skipping result for now");
+						continue;
+					}
 					if (postTag.type !== 4) {
 						continue;
 					}
